@@ -1,0 +1,5 @@
+rsconnect
+.DS_Store
+**/.DS_Store
+.Rhistory
+resources/kmers/kmer_lookup.RDS
