@@ -1,7 +1,6 @@
-# ElenMatchR
-## v1.0dev
+# ElenMatchR v1.0dev
 
-Comparative genomics of Coriobacteriia based on random forests. To use:
-### Option 1 (the easiest): visit the [shinyapps instance](https://jbisanz.shinyapps.io/elenmatchr/).
-#### OR
-### Option 2 (advanced). Download repository and run the shiny app via R studio. This will allow for modification of the code/ advanced parameters.
+Comparative genomics of Coriobacteriia based on random forests. Please visit the [shinyapps instance](https://jbisanz.shinyapps.io/elenmatchr/) to use. For certain large kmer-based jobs, it may be necessary to run locally in which case clone this repository.
+
+### To do:
+The kmer_lookup.RDS file is just too large for upload (104Mb), until fixed, please contact jordan.bisanz@gmail.com for access.
