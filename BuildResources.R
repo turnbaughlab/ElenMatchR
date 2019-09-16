@@ -127,65 +127,12 @@ klist<-readRDS("resources/kmers/kmerlist.RDS")
   saveRDS(fmat, "resources/kmers/kmer_derep.RDS")
 #removed all the temporary .idx files and the kmer list as it is redundant with the table
 
-stop()
-#########################
-library(tidyverse)
-library(readxl)  
-library(randomForest)  
-library(ggplot2)
+#split kmers into two files to upload to biggut
+kmers<-readRDS("/Volumes/turnbaughlab/qb3share/jbisanz/ElGenomes2019/ElenMatchR_v1.0/ElenMatchR/resources/kmers/kmer_lookup.RDS")
+k1<-kmers[1:5319404,]
+k2<-kmers[5319405:10638807,]
 
-kmers<-readRDS("/Volumes/turnbaughlab/qb3share/jbisanz/ElGenomes2019/ElenMatchR_v1.0/ElenMatchR/resources/kmers/kmer_derep.RDS")
-#kmers<-kmers %>% as.matrix()
-#colnames(kmers)<-as.character(colnames(kmers))
-
-phenotypes<-read_excel("/Volumes/turnbaughlab/qb3share/jbisanz/ElGenomes2019/ElenMatchR_v1.0/ElenMatchR/resources/ElenMatchR_phenotypes.xlsx", skip=1)
-phenotypes<-phenotypes %>% select(`GenomeID`, phenotype=Dopamine_Metabolism) %>% filter(grepl("Eggerthella_lenta", GenomeID)) %>% filter(!is.na(phenotype))
-kmers<-kmers[,phenotypes$GenomeID]
-
-fits<-
-lapply(1:10, function(x){
-randomForest(x=as.matrix(t(kmers)), y=factor(phenotypes$phenotype), ntree=1000, importance=TRUE)
-})
-
-ranks<-
-lapply(fits, function(x){
-  x$importance %>%
-    as.data.frame() %>%
-    rownames_to_column("KClusterID")
-  }) %>%
-  do.call(bind_rows, .) %>%
-  group_by(KClusterID) %>%
-  summarize(Importance=mean(MeanDecreaseGini), SD=sd(MeanDecreaseGini))
-
-ranks %>% arrange(desc(Importance)) %>%
-  mutate(SEM=SD/sqrt(10)) %>%
-  mutate(Rank=1:nrow(.)) %>%
-  filter(Rank<100) %>%
-  ggplot(aes(x=Rank, y=Importance, ymin=Importance-SEM, ymax=Importance+SEM)) +
-  geom_errorbar(width=0) +
-  geom_point()
-
-ranks %>%
-  arrange(desc(Importance)) %>%
-  mutate(Rank=1:nrow(.)) %>%
-  filter(Rank<20) %>%
-  left_join()
-  
+saveRDS(k1,"resources/kmers/kmer_lookup1.RDS")
+saveRDS(k2,"resources/kmers/kmer_lookup2.RDS")
 
 
-
-  left_join(phenotypes) %>%
-  ggplot(aes(y=clusterID, x=GenomeID, fill=present)) +
-  geom_tile() +
-  facet_grid(~phenotype, scales="free") +
-  theme(axis.text.x = element_text(angle=45, hjust=1))
-
-klookup %>% filter(KClusterID=="kc_72974")
-klookup %>% filter(KClusterID=="kc_43399")
-
-
-#%>%
-  ggplot(aes(x=Rank, y=MeanDecreaseGini)) +
-  geom_line()
-
-klookup<-readRDS("/Volumes/turnbaughlab/qb3share/jbisanz/ElGenomes2019/ElenMatchR_v1.0/ElenMatchR/resources/kmers/kmer_lookup.RDS")

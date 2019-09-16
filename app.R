@@ -196,7 +196,8 @@ server <- function(input, output, session) {
         theme(legend.position="none") +
         ggtitle(paste("Manhattan Plot:", phenoname))
     } else{
-      kmerlookup<-readRDS("resources/kmers/kmer_lookup.RDS")
+      #kmerlookup<-readRDS("resources/kmers/kmer_lookup.RDS")
+      kmerlookup<-rbind(readRDS("resources/kmers/kmer_lookup1.RDS"),readRDS("resources/kmers/kmer_lookup2.RDS"))
       timp<-
         importance %>%
         filter(Rank<=ntoplot) %>%
@@ -305,7 +306,8 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     names(fa)<-paste0(seqs$FeatureID,"|", seqs$Gene)
     return(list(fasta=fa, annotable=timp))
   } else {
-    klookup<-readRDS("resources/kmers/kmer_lookup.RDS")
+    #klookup<-readRDS("resources/kmers/kmer_lookup.RDS")
+    klookup<-rbind(readRDS("resources/kmers/kmer_lookup1.RDS"),readRDS("resources/kmers/kmer_lookup2.RDS"))
     timp<-
       importance %>%
       filter(Rank<=nfeats) %>%
