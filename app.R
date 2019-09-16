@@ -8,8 +8,10 @@ library(readxl)
 library(Biostrings)
 library(Matrix)
 library(ape)
+library(pryr)
 
 #options(repos=BiocManager::repositories())
+#library(rsconnect)
 #deployApp()
 
 #Static Vars on load
@@ -73,12 +75,13 @@ ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0dev"),
         plotOutput("ManhattanPlot")
       ),
       tabPanel("Phylogenetic Tree",
+        selectInput("TreeSource", "Tree Source", selected="Phylophlan", choices=c("Phylophlan","Eggerthella core genes")),
         selectInput("BranchLengths", "Branch Lengths", selected="Phylogenetic Tree", choices=c("Phylogenetic Tree","Cladogram")),
         selectInput("Orientation", "Orientation", selected="Linear", choices=c("Linear","Circular")),
-        selectInput("Prune", "Prune Tree?", selected="Remove genomes without phenotype", choices=c("Plot all 95 genomes","Remove genomes without phenotype")),
+        selectInput("Prune", "Prune Tree?", selected="Remove genomes without phenotype", choices=c("Plot all genomes in tree","Remove genomes without phenotype")),
         downloadButton("DLTreePlot", label="Download Tree Plot"),
         downloadButton("DLTree", label="Download Newick Format Tree"),
-        p("Note: phylogenetic trees created using PhyloPhlAn. Citation: Segata N, et al. PhyloPhlAn is a new method for improved phylogenetic and taxonomic placement of microbes. Nat Commun. 2013;4:2304. doi:10.1038/ncomms3304"),
+        p("Note: phylogenetic trees created using PhyloPhlAn or from alignment of core genes using Roary and FastTree. Citations: Segata N, et al. PhyloPhlAn is a new method for improved phylogenetic and taxonomic placement of microbes. Nat Commun. 2013;4:2304. doi:10.1038/ncomms3304; Page AJ et al. Roary: rapid large-scale prokaryote pan genome analysis. Bioinformatics 2-15. 31(22):3691-3693. DOI:10.1093/bioinformatics/btv421."),
         plotOutput("TreePlot")
       ),
       tabPanel("Annotation Table",
@@ -230,24 +233,26 @@ server <- function(input, output, session) {
     return(maplot)
   }
   
-  DrawTree<-function(branches, ori, prune, phenotable, phenoname){
-    phenotable<-phenotable %>% select(GenomeID, everything())
-   if(prune=="Remove genomes without phenotype"){ttree<-drop.tip(tree, tree$tip.label[!tree$tip.label %in% phenotable$GenomeID])} else {ttree<-tree}
+  DrawTree<-function(branches, ori, prune, phenotable, phenoname, tsource){
+    phenotable<-phenotable %>% select(GenomeID, everything()) %>% right_join(phenos[,c("GenomeID","Strain_Name")])
+    mtree<-tree
+    if(tsource!="Phylophlan"){mtree<-readRDS("resources/eggtree.RDS")}
+   if(prune=="Remove genomes without phenotype"){ttree<-drop.tip(mtree, mtree$tip.label[!mtree$tip.label %in% subset(phenotable, !is.na(Phenotype))$GenomeID])} else {ttree<-mtree}
   if(branches=="Phylogenetic Tree") {
     if(ori=="Linear"){
       tplot<-
       ggtree(ttree) %<+% phenotable +
-       geom_tippoint(aes(fill=Phenotype), shape=21) +
+       geom_tippoint(aes(fill=Phenotype), shape=21, size=3) +
        geom_tiplab(aes(label=Strain_Name), size=4) +
-       scale_fill_viridis_d(name=phenoname) +
-       theme(legend.position="right")
+        scale_fill_discrete(name=phenoname) +
+        theme(legend.position="right")
       tplot<-tplot + scale_x_continuous(limits=c(0, 1.5*max(tplot$data$x)))
      } else {
        tplot<-
        ggtree(ttree, layout="circular") %<+% phenotable +
-         geom_tippoint(aes(fill=Phenotype), shape=21) +
+         geom_tippoint(aes(fill=Phenotype), shape=21, size=3) +
          geom_tiplab2(aes(label=Strain_Name)) +
-         scale_fill_viridis_d(name=phenoname) +
+         scale_fill_discrete(name=phenoname) +
          theme(legend.position="right")
        tplot<-tplot + scale_x_continuous(limits=c(0, 1.5*max(tplot$data$x)))
      }
@@ -255,16 +260,16 @@ server <- function(input, output, session) {
     if(ori=="Linear"){
       tplot<-
       ggtree(ttree, branch.length = "none") %<+% phenotable +
-        geom_tippoint(aes(fill=Phenotype), shape=21) +
+        geom_tippoint(aes(fill=Phenotype), shape=21, size=3) +
         geom_tiplab(aes(label=Strain_Name), size=4) +
-        scale_fill_viridis_d(name=phenoname) +
+        scale_fill_discrete(name=phenoname) +
         theme(legend.position="right")
     } else {
       tplot<-
       ggtree(ttree, layout="circular", branch.length = "none") %<+% phenotable +
-        geom_tippoint(aes(fill=Phenotype), shape=21) +
+        geom_tippoint(aes(fill=Phenotype), shape=21, size=3) +
         geom_tiplab2(aes(label=Strain_Name)) +
-        scale_fill_viridis_d(name=phenoname) +
+        scale_fill_discrete(name=phenoname) +
         theme(legend.position="right")
     }
   }
@@ -355,6 +360,14 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
   ############# Main Analysis #############  #############  #############  #############
   observeEvent(input$StartAnalysis, {
     withProgress(message = 'Analyzing Data', value = 0, {    n=10
+    message(date(),"-> Cleaning up from last run")
+    message("Preclean memory: ", mem_used())
+    tmps<<-NULL
+    tmps<-NULL
+    gc()
+    message("Postclean memory: ", mem_used())
+    
+    
     message(date(),"-> Loading files for main analysis")
 
     incProgress(1/n, detail = "Loading data...")
@@ -387,6 +400,9 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     tmps$matrix<-tmps$matrix[,tmps$PhenoTable$GenomeID] #remove the unneeded columns
     tmps$matrix<-tmps$matrix[rowSums(tmps$matrix)!=ncol(tmps$matrix),]# remove features that are all present
     tmps$matrix<-tmps$matrix[rowSums(tmps$matrix)!=0,]# remove features that are all absent
+    
+    message("Post data load memory: ", mem_used())
+    
     
     ###
     message(date(), "-> Starting analysis of ",tmps$PhenoName, " on ", input$Mode)
@@ -477,7 +493,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     message(date(), "-> Drawing Tree")
     incProgress(8/n, detail = "Drawing tree...")
     
-    tmps$DrawTree<-DrawTree(input$BranchLengths, input$Orientation, input$Prune, tmps$PhenoTable, tmps$PhenoName)
+    tmps$DrawTree<-DrawTree(input$BranchLengths, input$Orientation, input$Prune, tmps$PhenoTable, tmps$PhenoName, input$TreeSource)
     
     output$TreePlot <- renderPlot({tmps$DrawTree}, height=700)
     output$DLTreePlot <- downloadHandler(
@@ -589,9 +605,9 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
   
   ########## Update tree
   
-  observeEvent(c(input$BranchLengths,input$Orientation, input$Prune), {
+  observeEvent(c(input$BranchLengths,input$Orientation, input$Prune, input$TreeSource), {
     message(date(), "-> Drawing Tree")
-    tmps$DrawTree<-DrawTree(input$BranchLengths, input$Orientation, input$Prune, tmps$PhenoTable, tmps$PhenoName)
+    tmps$DrawTree<-DrawTree(input$BranchLengths, input$Orientation, input$Prune, tmps$PhenoTable, tmps$PhenoName, input$TreeSource)
     
     output$TreePlot <- renderPlot({tmps$DrawTree}, height=700)
     output$DLTreePlot <- downloadHandler(
@@ -603,6 +619,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
   }, ignoreInit = TRUE)
   
   
+  ########## Update table
 observeEvent(input$AT_Nfeats, {
   message(date(), "-> Rebuilding Annotation Table")
   withProgress(message = 'Rebuilding Annotation Table', value = 0, {    n=10
