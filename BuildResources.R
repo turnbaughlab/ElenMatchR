@@ -11,7 +11,8 @@ dir.create("resources/fna")
 
 # Get tree
 library(ape)
-tree<-read.tree("/Volumes/turnbaughlab/qb3share/jbisanz/ElGenomes2019/phylophlan/output/AllStrains/AllStrains.tree.nwk")
+#tree<-read.tree("/Volumes/turnbaughlab/qb3share/jbisanz/ElGenomes2019/phylophlan/output/AllStrains/AllStrains.tree.nwk")
+tree<-read.tree("/Volumes/turnbaughlab/qb3share/jbisanz/ElGenomes2019/phylophlan/output/AllStrains_nomags/AllStrains_nomags.tree.nwk")
 tree<-root(tree, outgroup="GCA_000022965.1_ASM2296v1_protein", resolve.root=TRUE)
 is.rooted(tree)
 plot(tree)

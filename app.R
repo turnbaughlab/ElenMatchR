@@ -17,7 +17,8 @@ library(pryr)
 #Static Vars on load
 phenos<-read_excel("resources/ElenMatchR_phenotypes.xlsx", skip=1)
 tree<-readRDS("resources/tree.RDS")
-
+PWIDTH=5 #plot width
+PHEIGHT=4 #plot height
 
 # User interface ########## ########## ########## ########## ########## ########## ##########
 ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0dev"),
@@ -55,7 +56,7 @@ ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0dev"),
         p("Description: This table represents the confusion matrix for most accurate classifier built during feature selection. Given that we are primarily interested in feature selection, these results are provided for informational purposes.")            
       ),
       tabPanel("Importance Scatter Plot",
-        sliderInput("Scatter_Nfeats", "Number of features on plot:",  min = 1, max = 20000, value = 100),
+        sliderInput("Scatter_Nfeats", "Number of features on plot:",  min = 1, max = 1000, value = 100),
         downloadButton("DLImportancePlot", label="Download Importance Scatter Plot"),
         downloadButton("DLImportanceRaw", label="Download Importance Scores for all features"),
         p("Description: This plot has ranked all features (gene or kmer clusters) by their estimated importance (Mean Decrease GINI)."),
@@ -69,7 +70,7 @@ ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0dev"),
       ),
       tabPanel("Manhattan Plot",
         selectInput("RefGenome", "Reference Genome", selected="Eggerthella lenta DSM 2243", choices=phenos$Strain_Name),
-        sliderInput("MA_Nfeats", "Number of features on plot:",  min = 10, max = 1000, value = 10),
+        sliderInput("MA_Nfeats", "Number of features on plot:",  min = 10, max = 100, value = 10),
         downloadButton("DLMAplot", label="Download Plot"),
         p("This plot shows the genomic location of important features within a selected reference genome. Where multiple scaffolds are present, each has been plotted individually. scaffolds without a hit are not plotted."),
         plotOutput("ManhattanPlot")
@@ -194,7 +195,7 @@ server <- function(input, output, session) {
         geom_hline(yintercept = 0) +
         facet_grid(~seqid, space="free") +
         xlab("Base position") +
-        ylab("Mean Decrease GINI ± SD") +
+        ylab("Mean Decrease GINI") +
         scale_color_viridis_c() +
         theme(legend.position="none") +
         ggtitle(paste("Manhattan Plot:", phenoname))
@@ -224,7 +225,7 @@ server <- function(input, output, session) {
         geom_hline(yintercept = 0) +
         facet_grid(~Contig, space="free") +
         xlab("Base position") +
-        ylab("Mean Decrease GINI ± SD") +
+        ylab("Mean Decrease GINI") +
         scale_color_viridis_c() +
         theme(legend.position="none") +
         ggtitle(paste("Manhattan Plot:", phenoname))
@@ -452,7 +453,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     output$DLImportancePlot <- downloadHandler(
       filename = function() { paste0("ScatterPlot_", tmps$PhenoName, "_cov", input$COV, "_pid", input$PID, '.pdf') },
       content = function(file) {
-        ggsave(file, plot = tmps$DrawScatter$Plot, device = "pdf", width=10, height=7.5, useDingbats=F)
+        ggsave(file, plot = tmps$DrawScatter$Plot, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
       }
     )
     output$DLImportanceRaw <- downloadHandler(
@@ -471,7 +472,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     output$DLHeatmap <- downloadHandler(
       filename = function() { paste0("Heatmap_", tmps$PhenoName, "_cov", input$COV, "_pid", input$PID, '.pdf') },
       content = function(file) {
-        ggsave(file, plot = tmps$DrawHeatMap, device = "pdf", width=10, height=7.5, useDingbats=F)
+        ggsave(file, plot = tmps$DrawHeatMap, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
       }
     )
     
@@ -485,7 +486,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     output$DLMAplot <- downloadHandler(
       filename = function() { paste0("MAPlot_", tmps$PhenoName, "_cov", input$COV, "_pid", input$PID, '.pdf') },
       content = function(file) {
-        ggsave(file, plot = tmps$DrawMA, device = "pdf", width=10, height=7.5, useDingbats=F)
+        ggsave(file, plot = tmps$DrawMA, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
       }
     )
  
@@ -499,7 +500,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     output$DLTreePlot <- downloadHandler(
       filename = function() { paste0("PhyloTree_", tmps$PhenoName, '.pdf') },
       content = function(file) {
-        ggsave(file, plot = tmps$DrawTree, device = "pdf", width=10, height=7.5, useDingbats=F)
+        ggsave(file, plot = tmps$DrawTree, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
       }
     )   
     output$DLTree <- downloadHandler(
@@ -559,7 +560,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     output$DLImportancePlot <- downloadHandler(
       filename = function() { paste0("ScatterPlot_", tmps$PhenoName, "_cov", input$COV, "_pid", input$PID, '.pdf') },
       content = function(file) {
-        ggsave(file, plot = tmps$DrawScatter$Plot, device = "pdf", width=10, height=7.5, useDingbats=F)
+        ggsave(file, plot = tmps$DrawScatter$Plot, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
       }
     )
     output$DLImportanceRaw <- downloadHandler(
@@ -579,7 +580,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     output$DLHeatmap <- downloadHandler(
       filename = function() { paste0("Heatmap_", tmps$PhenoName, "_cov", input$COV, "_pid", input$PID, '.pdf') },
       content = function(file) {
-        ggsave(file, plot = tmps$DrawHeatMap, device = "pdf", width=10, height=7.5, useDingbats=F)
+        ggsave(file, plot = tmps$DrawHeatMap, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
       }
     )
   }, ignoreInit = TRUE)
@@ -596,7 +597,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
       output$DLMAplot <- downloadHandler(
         filename = function() { paste0("MAPlot_", tmps$PhenoName, "_cov", input$COV, "_pid", input$PID, '.pdf') },
         content = function(file) {
-          ggsave(file, plot = tmps$DrawMA, device = "pdf", width=10, height=7.5, useDingbats=F)
+          ggsave(file, plot = tmps$DrawMA, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
         }
       )
     })
@@ -613,7 +614,7 @@ MakeAnnoTable<-function(mode, importance, genelist, nfeats, phenotable){
     output$DLTreePlot <- downloadHandler(
       filename = function() { paste0("PhyloTree_", tmps$PhenoName, '.pdf') },
       content = function(file) {
-        ggsave(file, plot = tmps$DrawTree, device = "pdf", width=10, height=7.5, useDingbats=F)
+        ggsave(file, plot = tmps$DrawTree, device = "pdf", width=PWIDTH, height=PHEIGHT, useDingbats=F)
       }
     )   
   }, ignoreInit = TRUE)
