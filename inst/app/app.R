@@ -21,7 +21,7 @@ PWIDTH=5 #plot width
 PHEIGHT=4 #plot height
 
 # User interface ########## ########## ########## ########## ########## ########## ##########
-ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0dev"),
+ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9000"),
                  
       tabPanel("Input",
         h3("Instructions"),
@@ -32,7 +32,7 @@ ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0dev"),
           actionButton(inputId="StartAnalysis", label="Execute Analysis"),
         hr(),
         h3("Phenotypes"),
-          selectInput("UserPhenotype", "Preloaded phenotype to analyze:", selected="Digoxin_Metabolism", choices=c("Digoxin_Metabolism","Pinoresinol_Metabolism","Tetracycline_Resistance", "Dopamine_Metabolism")),
+          selectInput("UserPhenotype", "Preloaded phenotype to analyze:", selected="Tetracycline_Resistance", choices=c("Tetracycline_Resistance","Digoxin_Metabolism","Pinoresinol_Metabolism","Dopamine_Metabolism")),
           fileInput("phenofile","Or upload your own using the provided template:", multiple = FALSE),
           downloadButton("DLtemplate", label="Download xlsx template"),
         hr(),
@@ -42,7 +42,7 @@ ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0dev"),
           sliderInput("Nreps", "Number of replications:", min=3, max=10, value=3),
           sliderInput("Ntrees", "Number of trees generated in model:", min=500, max=5000, value=1000, step=500),
         h4("BLAST (Genes mode only):"),
-          selectInput("PID", "Minimum percent BLASTP identity:", selected=80, choices=c(seq(30,90,10), 95, 99)),
+          selectInput("PID", "Minimum percent BLASTP identity:", selected=60, choices=c(seq(30,90,10), 95, 99)),
           selectInput("COV", "Minimum percent BLASTP coverage:", selected=80, choices=c(seq(50,90,10), 95, 99)),
         hr(),
         p("Citation: Bisanz et al., 2019 DOI:10.1101/304840")

@@ -4,7 +4,7 @@
 
 run_ElenMatchR <- function() {
   
-  appDir <- system.file("shiny-app", package = "ElenMatchR")
+  appDir <- system.file("app",package = "ElenMatchR")
   if (appDir == "") {
     stop("Could not installation.", call = FALSE)
   }
