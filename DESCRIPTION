@@ -1,0 +1,26 @@
+Package: ElenMatchR
+Title: ElenMatchR
+Version: 1.0dev
+Author: Jordan Bisanz <jordan.bisanz@gmail.com>
+Maintainer: Jordan Bisanz <jordan.bisanz@gmail.com>
+Description: Comparative genomics tool for Eggerthella lenta and Coriobacteriia
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+Depends: 
+	R (>= 3.5.0),
+    ape (>= 5.2),
+    tidyverse (>= 1.2.1),
+    shiny (>= 1.3.2),
+    randomForest (>= 4.6),
+    ggtree (?= 1.16),
+    ggdendro (>= 0.1),
+    DT (>= 0.6),
+    readxl (>= 1.3.1),
+    Biostrings (>= 2.46.0),
+    Matrix (>= 1.2),
+    ape (>= 5.3),
+    pryr (> =0.1.4)
