@@ -1,6 +1,6 @@
 Package: ElenMatchR
 Title: ElenMatchR Comparative Genomics Tool
-Version: 1.0
+Version: 1.0.9000
 Author: Jordan Bisanz <jordan.bisanz@gmail.com>
 Maintainer: Jordan Bisanz <jordan.bisanz@gmail.com>
 Description: Comparative genomics tool for Eggerthella lenta and Coriobacteriia
@@ -11,7 +11,7 @@ RoxygenNote: 6.0.1
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Depends: 
-	R (>= 3.5.0),
+    R (>= 3.5.0),
     ape (>= 5.2),
     tidyverse (>= 1.2.1),
     shiny (>= 1.3.2),
