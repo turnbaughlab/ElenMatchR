@@ -23,4 +23,4 @@ Depends:
     Biostrings (>= 2.46.0),
     Matrix (>= 1.2),
     ape (>= 5.3),
-    pryr (> =0.1.4)
+    pryr (>= 0.1.4)
