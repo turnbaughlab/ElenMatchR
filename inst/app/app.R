@@ -21,7 +21,7 @@ PWIDTH=5 #plot width
 PHEIGHT=4 #plot height
 
 # User interface ########## ########## ########## ########## ########## ########## ##########
-ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9000"),
+ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9001"),
                  
       tabPanel("Input",
         h3("Instructions"),
@@ -39,7 +39,7 @@ ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9000"),
         h3("Parameters"),
           selectInput("Mode", "Analysis mode:", selected="Genes", choices=c("Genes","Kmers")),
         h4("Random forest:"),
-          sliderInput("Nreps", "Number of replications:", min=3, max=10, value=3),
+          sliderInput("Nreps", "Number of replications:", min=1, max=10, value=3),
           sliderInput("Ntrees", "Number of trees generated in model:", min=500, max=5000, value=1000, step=500),
         h4("BLAST (Genes mode only):"),
           selectInput("PID", "Minimum percent BLASTP identity:", selected=60, choices=c(seq(30,90,10), 95, 99)),
@@ -70,7 +70,7 @@ ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9000"),
       ),
       tabPanel("Manhattan Plot",
         selectInput("RefGenome", "Reference Genome", selected="Eggerthella lenta DSM 2243", choices=phenos$Strain_Name),
-        sliderInput("MA_Nfeats", "Number of features on plot:",  min = 10, max = 100, value = 10),
+        sliderInput("MA_Nfeats", "Number of features on plot:",  min = 1, max = 100, value = 10),
         downloadButton("DLMAplot", label="Download Plot"),
         p("This plot shows the genomic location of important features within a selected reference genome. Where multiple scaffolds are present, each has been plotted individually. scaffolds without a hit are not plotted."),
         plotOutput("ManhattanPlot")
@@ -178,7 +178,7 @@ server <- function(input, output, session) {
     fasta<-readRDS(paste0("resources/fna/",genomeid ,".RDS"))
     gff<-readRDS("resources/merged.gff") %>% filter(GenomeID==genomeid) %>% filter(type=="CDS") %>% mutate(Genes=gsub(";..+","", attributes) %>% gsub("ID=","", .))
     if(mode=="Genes"){
-      maplot<-
+      tplot<-
         importance %>%
         filter(Rank<=ntoplot) %>%
         left_join(
@@ -187,7 +187,10 @@ server <- function(input, output, session) {
         dplyr::rename(Genes=genomeid) %>%
         mutate(Genes=gsub(",..+","", Genes)) %>% #masking multiple copies
         left_join(gff) %>%
-        filter(!is.na(start)) %>% #remove features not in the reference
+        filter(!is.na(start)) #remove features not in the reference
+      if(nrow(tplot)!=0){
+        maplot<-
+        tplot %>%
         ggplot(aes(x=start, y=Importance, ymin=0, ymax=Importance, color=Importance)) +
         geom_errorbar(width=0) +
         geom_point() +
@@ -199,6 +202,9 @@ server <- function(input, output, session) {
         scale_color_viridis_c() +
         theme(legend.position="none") +
         ggtitle(paste("Manhattan Plot:", phenoname))
+      } else {
+        maplot<-ggplot(data=tplot, aes(x=1, y=1, label="Error: features not found in reference genome. Please change reference genome.")) + geom_text() + theme_void()
+      }
     } else{
       #kmerlookup<-readRDS("resources/kmers/kmer_lookup.RDS")
       kmerlookup<-rbind(readRDS("resources/kmers/kmer_lookup1.RDS"),readRDS("resources/kmers/kmer_lookup2.RDS"))
@@ -216,6 +222,7 @@ server <- function(input, output, session) {
         }) %>%
         do.call(bind_rows, .) %>%
         left_join(timp)
+      if(nrow(locations!=0)){
       maplot<-
         locations %>%
         ggplot(aes(x=position, y=Importance, ymin=0, ymax=Importance, color=Importance)) +
@@ -229,6 +236,9 @@ server <- function(input, output, session) {
         scale_color_viridis_c() +
         theme(legend.position="none") +
         ggtitle(paste("Manhattan Plot:", phenoname))
+      } else {
+        maplot<-ggplot(data=maplot, aes(x=1, y=1, label="Error: features not found in reference genome. Please change reference genome.")) + geom_text() + theme_void()
+      }
     }
     
     return(maplot)
