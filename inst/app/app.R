@@ -21,7 +21,7 @@ PWIDTH=5 #plot width
 PHEIGHT=4 #plot height
 
 # User interface ########## ########## ########## ########## ########## ########## ##########
-ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9002"),
+ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9003"),
                  
       tabPanel("Input",
         h3("Instructions"),
