@@ -21,7 +21,7 @@ PWIDTH=5 #plot width
 PHEIGHT=4 #plot height
 
 # User interface ########## ########## ########## ########## ########## ########## ##########
-ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9001"),
+ui <- navbarPage(HTML("ElenMatchR: Comparative Genomics Tool v1.0.9003"),
                  
       tabPanel("Input",
         h3("Instructions"),
@@ -660,7 +660,7 @@ observeEvent(input$AT_Nfeats, {
   
 
   output$DLtemplate <- downloadHandler(
-    filename = function() {"ElenMatchR_tenmplate.xlsx"},
+    filename = function() {"ElenMatchR_template.xlsx"},
     content = function(file) {
       file.copy(to=file, from="resources/ElenMatchR_template.xlsx")
     }
